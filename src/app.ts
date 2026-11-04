@@ -2,6 +2,8 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 
+import authRoutes from "./modules/auth/auth.routes";
+
 const app = express();
 
 app.use(helmet());
@@ -14,5 +16,7 @@ app.get("/health", (_req, res) => {
     service: "mon-sdis85-api",
   });
 });
+
+app.use("/api/auth", authRoutes);
 
 export default app;

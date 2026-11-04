@@ -1,9 +1,8 @@
 import "dotenv/config";
 
-import app from "./app";
+import app from "./app.js";
+import { env } from "./config/env.js";
 
-const PORT = Number(process.env.PORT) || 3000;
-
-app.listen(PORT, () => {
-  console.log(`🚒 Mon SDIS85 API démarrée sur http://localhost:${PORT}`);
+app.listen(env.port, () => {
+  console.log(`🚒 Mon SDIS85 API démarrée sur http://localhost:${env.port}`);
 });

@@ -149,3 +149,5 @@ vite.config.ts.timestamp-*
 .turbo
 
 .vscode/
+
+src/config/certificates/*.crt

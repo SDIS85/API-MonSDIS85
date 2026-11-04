@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "API pour l'application MonSDIS85",
   "main": "index.js",
-  "type": "module",
+  "type": "commonjs",
   "directories": {
     "test": "tests"
   },
@@ -19,7 +19,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
   "bugs": {
     "url": "https://github.com/SDIS85/API-MonSDIS85/issues"
   },
@@ -28,7 +27,8 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.9",
     "express": "^5.3.0",
-    "helmet": "^8.3.0"
+    "helmet": "^8.3.0",
+    "ldapts": "^9.2.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
