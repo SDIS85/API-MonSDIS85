@@ -178,6 +178,11 @@ async function findUserWithClient(
   // un utilisateur sans matricule ne doit pas pouvoir
   // être considéré comme un utilisateur Mon SDIS85 valide.
 
+
+
+
+
+
   throw new Error(
     `TODO: rechercher l'utilisateur LDAP avec le filtre ${filter}`,
   );
@@ -289,20 +294,29 @@ async function authenticate(
 ): Promise<LdapUser> {
   // TODO:
   // - vérifier que username et password ne sont pas vides
+      if (!username || !password) {
+        console.log("Identifiant et mot de passe requis.")
+      }
+    }
   //
   // - parcourir env.ldap.urls dans l'ordre
+
   //
   // - appeler authenticateOnServer() pour chaque serveur
+  authenticateOnServer;
   //
   // - ne PAS essayer un autre serveur lorsqu'on obtient :
   //      LdapAuthenticationError
   //      LdapAuthorizationError
+
   //
   // - tenter le serveur suivant uniquement lorsqu'il s'agit
   //   d'une erreur technique / serveur indisponible
+
   //
   // - si aucun serveur ne fonctionne :
   //   lancer LdapUnavailableError
+
   //
   // Attention :
   // ne jamais logger le mot de passe fourni.
@@ -311,7 +325,6 @@ async function authenticate(
   void password;
 
   throw new Error("TODO: implémenter l'authentification LDAP avec failover");
-}
 
 export const ldapService = {
   authenticate,

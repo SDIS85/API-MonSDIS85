@@ -23,8 +23,16 @@ async function login(
 
     // TODO:
     // - vérifier que username et password sont présents
+    if (!username || !password) {
+      res.status(400).json({
+        message: "Identifiant et mot de passe requis.",
+      });
+    }
     // - nettoyer / normaliser le username si nécessaire
+
     // - appeler authService.login()
+    authService.login;
+
     // - retourner une réponse JSON adaptée
     //
     // Exemple de réponse future :
@@ -38,6 +46,7 @@ async function login(
     //   "accessToken": "..."
     // }
     //
+
     // Pour l'instant, la génération du token pourra rester
     // hors scope si API-016 n'est pas encore réalisée.
 
@@ -52,4 +61,5 @@ async function login(
 
 export const authController = {
   login,
+
 };

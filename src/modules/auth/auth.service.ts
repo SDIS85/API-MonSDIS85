@@ -28,6 +28,7 @@ export interface LoginResult {
 function mapLdapUserToAuthenticatedUser(ldapUser: LdapUser): AuthenticatedUser {
   // TODO :
   // Ajouter / retirer des champs selon ce qu'on souhaite recevoir dans l'appli
+  // Token du téléphone pour notif phoneKey : string[]
 
   return {
     username: ldapUser.username,
@@ -47,13 +48,27 @@ function mapLdapUserToAuthenticatedUser(ldapUser: LdapUser): AuthenticatedUser {
 async function login(username: string, password: string): Promise<LoginResult> {
   // TODO:
   // 1. appeler ldapService.authenticate(username, password)
-  //
+
+  ldapService.authenticate(username, password)
+
   // 2. récupérer l'utilisateur LDAP authentifié
-  //
+  
+  const user = await mapLdapUserToAuthenticatedUser;
+
+
   // 3. plus tard :
   //    rechercher l'Agent correspondant dans MariaDB
-  //
+  
+
+
   // 4. vérifier que l'Agent est bien autorisé à utiliser l'application
+
+    if (!user) {
+      return status(401).json({
+        message: "Identifiants invalides ou accès non autorisé.",
+      });
+    }
+
   //
   // 5. mapper les données LDAP / Agent vers un objet propre à l'API
   //
@@ -61,6 +76,7 @@ async function login(username: string, password: string): Promise<LoginResult> {
   //    générer un access token
   //
   // 7. retourner un LoginResult
+  return LoginResult;
   //
   // Attention :
   // - ne jamais retourner le mot de passe
