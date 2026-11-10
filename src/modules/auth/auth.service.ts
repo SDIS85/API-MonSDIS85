@@ -49,44 +49,31 @@ async function login(username: string, password: string): Promise<LoginResult> {
   // TODO:
   // 1. appeler ldapService.authenticate(username, password)
 
-  ldapService.authenticate(username, password)
+  const ldapUser = await ldapService.authenticate(username, password);
 
   // 2. récupérer l'utilisateur LDAP authentifié
   
-  const user = await mapLdapUserToAuthenticatedUser;
+  const user = mapLdapUserToAuthenticatedUser(ldapUser);
 
 
   // 3. plus tard :
   //    rechercher l'Agent correspondant dans MariaDB
-  
-
 
   // 4. vérifier que l'Agent est bien autorisé à utiliser l'application
 
-    if (!user) {
-      return status(401).json({
-        message: "Identifiants invalides ou accès non autorisé.",
-      });
-    }
-
   //
   // 5. mapper les données LDAP / Agent vers un objet propre à l'API
-  //
+
   // 6. plus tard :
   //    générer un access token
-  //
+
   // 7. retourner un LoginResult
-  return LoginResult;
+  return { user };
   //
   // Attention :
   // - ne jamais retourner le mot de passe
   // - ne jamais exposer bindDn / bindPassword
   // - ne pas retourner l'objet LDAP brut
-
-  void username;
-  void password;
-
-  throw new Error("TODO: implémenter le service d'authentification");
 }
 
 export const authService = {

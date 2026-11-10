@@ -27,11 +27,12 @@ async function login(
       res.status(400).json({
         message: "Identifiant et mot de passe requis.",
       });
+      return;
     }
     // - nettoyer / normaliser le username si nécessaire
-
+    const cleanUsername = username.trim();
     // - appeler authService.login()
-    authService.login;
+    const result = await authService.login(cleanUsername, password);
 
     // - retourner une réponse JSON adaptée
     //
@@ -46,14 +47,10 @@ async function login(
     //   "accessToken": "..."
     // }
     //
-
+    res.status(200).json(result)
     // Pour l'instant, la génération du token pourra rester
     // hors scope si API-016 n'est pas encore réalisée.
 
-    void username;
-    void password;
-
-    throw new Error("TODO: implémenter le contrôleur de connexion");
   } catch (error) {
     next(error);
   }
