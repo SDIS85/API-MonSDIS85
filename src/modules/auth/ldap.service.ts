@@ -181,6 +181,7 @@ async function findUserWithClient(
 
   const [entry] = searchEntries;
   if (!entry) {
+    console.log("Aucun utilisateur trouvé");
     return null;
   }
   //
@@ -200,6 +201,7 @@ async function findUserWithClient(
   // un utilisateur sans matricule ne doit pas pouvoir
   // être considéré comme un utilisateur Mon SDIS85 valide.
   if (!user.registrationNumber) {
+    console.log("Utilisateur trouvé mais sans matricule");
     return null;
   };
 
@@ -297,11 +299,13 @@ async function authenticateOnServer(
     // 4. si l'utilisateur n'existe pas :
     //    lancer LdapAuthenticationError
     if (!user) {
+      console.log("L'utilisateur n'existe pas");
       throw new LdapAuthenticationError();
     }
     //
     // 5. vérifier ses groupes avec isAllowedUser()
     if (!isAllowedUser(user)) {
+      console.log("L'utilisateur n'est pas dans un groupe autorisé")
       throw new LdapAuthorizationError();
     }
 
@@ -318,6 +322,7 @@ async function authenticateOnServer(
       //    lancer LdapAuthenticationError
     } catch (error) {
       if (error instanceof InvalidCredentialsError) {
+        console.log("Mot de passe refusé par l'AD");
         throw new LdapAuthenticationError();
       }
       throw error;
