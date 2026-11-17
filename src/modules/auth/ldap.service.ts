@@ -145,24 +145,8 @@ async function findUserWithClient(
 ): Promise<LdapUser | null> {
   const filter = buildUserFilter(username);
 
-  // TODO:
-  //
-  // Effectuer une recherche dans env.ldap.baseDn.
-  //
-  // Paramètres attendus :
-  // - scope : "sub"
-  // - filter : celui construit ci-dessus
-  //
-  // Attributs utiles :
-  // - distinguishedName
-  // - sAMAccountName
-  // - displayName
-  // - givenName
-  // - sn
-  // - mail
-  // - employeeID
-  // - initials
 
+  // Effectuer une recherche dans env.ldap.baseDn.
   const { searchEntries } = await client.search(env.ldap.baseDn, {
     scope: "sub",
     filter,
@@ -183,20 +167,18 @@ async function findUserWithClient(
     console.log("Aucun utilisateur trouvé");
     return null;
   }
-  //
-  // La recherche doit permettre de déterminer :
+
+  // La recherche permet de déterminer :
   // - le DN utilisateur ;
   // - son login ;
   // - son matricule ;
   // - son identité.
 
-  // Une fois l'utilisateur trouvé :
   // - récupérer ses groupes avec getTransitiveGroups()
   const groups = await getTransitiveGroups(client, entry.dn);
   // - utiliser mapLdapEntry()
   const user = mapLdapEntry(entry, groups);
 
-  // Attention :
   // un utilisateur sans matricule ne doit pas pouvoir
   // être considéré comme un utilisateur Mon SDIS85 valide.
   if (!user.registrationNumber) {
