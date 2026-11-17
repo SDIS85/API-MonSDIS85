@@ -7,12 +7,7 @@ interface LoginRequestBody {
   password?: string;
 }
 
-/**
- * Contrôleur d'authentification.
- *
- * Il ne doit contenir aucune logique LDAP directe.
- * Toute la logique métier doit être déléguée à auth.service.ts.
- */
+// Contrôleur d'authentification.
 async function login(
   req: Request<unknown, unknown, LoginRequestBody>,
   res: Response,
@@ -20,36 +15,16 @@ async function login(
 ): Promise<void> {
   try {
     const { username, password } = req.body;
-
-    // TODO:
-    // - vérifier que username et password sont présents
     if (!username || !password) {
       res.status(400).json({
         message: "Identifiant et mot de passe requis.",
       });
       return;
     }
-    // - nettoyer / normaliser le username si nécessaire
     const cleanUsername = username.trim();
-    // - appeler authService.login()
     const result = await authService.login(cleanUsername, password);
 
-    // - retourner une réponse JSON adaptée
-    //
-    // Exemple de réponse future :
-    //
-    // {
-    //   "user": {
-    //     "username": "...",
-    //     "displayName": "...",
-    //     ...
-    //   },
-    //   "accessToken": "..."
-    // }
-    //
     res.status(200).json(result)
-    // Pour l'instant, la génération du token pourra rester
-    // hors scope si API-016 n'est pas encore réalisée.
 
   } catch (error) {
     next(error);

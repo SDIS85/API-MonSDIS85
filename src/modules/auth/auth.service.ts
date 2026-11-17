@@ -10,22 +10,13 @@ export interface AuthenticatedUser {
 
 export interface LoginResult {
   user: AuthenticatedUser;
-
-  /**
-   * Sera ajouté lors de l'implémentation de la gestion
-   * des tokens dans API-016.
-   */
+  // Sera ajouté lors de l'implémentation de la gestion des tokens dans API-016.
   accessToken?: string;
 }
 
-/**
- * Transforme un utilisateur LDAP en utilisateur exposable
- * par l'API.
- *
- * On évite ainsi de renvoyer directement l'objet LDAP brut
- * au client Flutter.
- */
+// Transforme un utilisateur LDAP en utilisateur exposable par l'API.
 function mapLdapUserToAuthenticatedUser(ldapUser: LdapUser): AuthenticatedUser {
+
   // TODO :
   // Ajouter / retirer des champs selon ce qu'on souhaite recevoir dans l'appli
   // Token du téléphone pour notif phoneKey : string[]
@@ -39,41 +30,19 @@ function mapLdapUserToAuthenticatedUser(ldapUser: LdapUser): AuthenticatedUser {
   };
 }
 
-/**
- * Service principal d'authentification.
- *
- * Ce fichier orchestre l'authentification mais ne doit pas
- * manipuler directement le client LDAP.
- */
+// Ce fichier orchestre l'authentification
 async function login(username: string, password: string): Promise<LoginResult> {
-  // TODO:
-  // 1. appeler ldapService.authenticate(username, password)
 
   const ldapUser = await ldapService.authenticate(username, password);
-
-  // 2. récupérer l'utilisateur LDAP authentifié
-  
   const user = mapLdapUserToAuthenticatedUser(ldapUser);
 
+  // TODO : 
+  // rechercher l'Agent correspondant dans MariaDB
+  // vérifier que l'Agent est bien autorisé à utiliser l'application
+  // mapper les données LDAP / Agent vers un objet propre à l'API
+  // générer un access token
 
-  // 3. plus tard :
-  //    rechercher l'Agent correspondant dans MariaDB
-
-  // 4. vérifier que l'Agent est bien autorisé à utiliser l'application
-
-  //
-  // 5. mapper les données LDAP / Agent vers un objet propre à l'API
-
-  // 6. plus tard :
-  //    générer un access token
-
-  // 7. retourner un LoginResult
   return { user };
-  //
-  // Attention :
-  // - ne jamais retourner le mot de passe
-  // - ne jamais exposer bindDn / bindPassword
-  // - ne pas retourner l'objet LDAP brut
 }
 
 export const authService = {

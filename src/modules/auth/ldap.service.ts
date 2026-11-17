@@ -74,21 +74,14 @@ function escapeLdapFilterValue(value: string): string {
     .replace(/\0/g, "\\00");
 }
 
-/**
- * Construit le filtre LDAP à partir du template défini dans le .env.
- *
- * Exemple :
- * LDAP_USER_FILTER=(sAMAccountName={{username}})
- */
+// Construit le filtre LDAP à partir du template défini dans le .env.
 function buildUserFilter(username: string): string {
   const escapedUsername = escapeLdapFilterValue(username);
 
   return env.ldap.userFilter.replace("{{username}}", escapedUsername);
 }
 
-/**
- * Normalise un attribut LDAP censé contenir une chaîne.
- */
+ // Normalise un attribut LDAP censé contenir une chaîne.
 function normalizeString(value: unknown): string | undefined {
   if (typeof value === "string") {
     return value;
@@ -96,10 +89,8 @@ function normalizeString(value: unknown): string | undefined {
   return undefined;
 }
 
-/**
- * Certains attributs LDAP peuvent être retournés comme une chaîne unique
- * ou comme un tableau selon le nombre de valeurs.
- */
+// Certains attributs LDAP peuvent être retournés comme une chaîne unique
+// ou comme un tableau selon le nombre de valeurs.
 function normalizeStringArray(value: unknown): string[] {
   if (typeof value === "string") {
     return [value];
@@ -112,9 +103,7 @@ function normalizeStringArray(value: unknown): string[] {
   return [];
 }
 
-/**
- * Transforme une Entry LDAP brute en objet utilisable par notre application.
- */
+// Transforme une Entry LDAP brute en objet utilisable par notre application.
 function mapLdapEntry(entry: Entry, memberOf: string[] = []): LdapUser {
   const employeeId = normalizeString(entry.employeeID)?.trim();
   const initials = normalizeString(entry.initials)?.trim();
@@ -136,9 +125,8 @@ function mapLdapEntry(entry: Entry, memberOf: string[] = []): LdapUser {
   };
 }
 
-/**
- * Recherche un utilisateur dans Active Directory.
- */
+
+// Recherche un utilisateur dans Active Directory.
 async function findUserWithClient(
   client: Client,
   username: string,
@@ -190,21 +178,13 @@ async function findUserWithClient(
 
 }
 
-/**
- * Vérifie que l'utilisateur appartient à l'un des groupes LDAP autorisés.
- */
+// Vérifie que l'utilisateur appartient à l'un des groupes LDAP autorisés.
 function isAllowedUser(user: LdapUser): boolean {
-  // TODO:
-  // - si aucun groupe n'est configuré, décider du comportement souhaité
-  // - comparer user.memberOf avec env.ldap.allowedGroups
-  // - effectuer la comparaison sans tenir compte de la casse
-  // - retourner true si au moins un groupe correspond
 
   // comparer user.memberOf avec env.ldap.allowedGroups
-  // effectuer la comparaison sans tenir compte de la casse
   const allowedGroups = env.ldap.allowedGroups;
 
-  // si aucun groupe n'est configuré, décider du comportement souhaité
+  // TODO : si aucun groupe n'est configuré, décider du comportement souhaité
   if (allowedGroups.length === 0) {
     return false;
   }
@@ -213,39 +193,21 @@ function isAllowedUser(user: LdapUser): boolean {
   return user.memberOf.some((group) => allowedGroups.includes(group));
 }
 
-/**
- * Récupère tous les groupes Active Directory auxquels appartient
- * l'utilisateur, y compris via des groupes imbriqués.
- */
+// Récupère tous les groupes Active Directory auxquels appartient l'utilisateur
 async function getTransitiveGroups(
-  // client: Awaited<ReturnType<typeof connectLdap>["client"]>,
   client: Client,
   userDn: string,
 ): Promise<string[]> {
-  // TODO:
+
   // - échapper userDn avec escapeLdapFilterValue()
   const escapedDn = escapeLdapFilterValue(userDn);
-  //
-  // - rechercher les objets de type "group"
-  //
-  // - utiliser la règle de correspondance Active Directory
+
   //   permettant de retrouver les appartenances transitives
-  //
-  // - récupérer uniquement "distinguishedName"
-  //
   // - retourner un tableau de DN de groupes
-  //
-  // Indice :
-  // l'ancien projet utilisait la matching rule AD :
-  //
-  // 1.2.840.113556.1.4.1941
-  //
-  // Le filtre devra rechercher les groupes dont l'utilisateur
-  // est membre directement ou indirectement.
+  // Le filtre devra rechercher les groupes dont l'utilisateur est membre directement ou indirectement.
   const LDAP_MATCHING_RULE = "1.2.840.113556.1.4.1941";
   const filter = `(&(objectClass=group)(member:${LDAP_MATCHING_RULE}:=${escapedDn}))`;
 
-  // const searchEntries = await client.search(env.ldap.baseDn, {
   const { searchEntries } = await client.search(env.ldap.baseDn, {
     scope: "sub",
     filter,
@@ -258,47 +220,39 @@ async function getTransitiveGroups(
 
 }
 
-/**
- * Tente d'authentifier l'utilisateur sur un serveur LDAP précis.
- */
+// Tente d'authentifier l'utilisateur sur un serveur LDAP précis.
 async function authenticateOnServer(
   url: string,
   username: string,
   password: string,
 ): Promise<LdapUser> {
-  // TODO:
-  // 1. créer un client LDAP avec createLdapClient(url)
+
   const serviceClient = createLdapClient(url);
 
   try {
-    // 2. effectuer un bind avec :
-    //    - env.ldap.bindDn
-    //    - env.ldap.bindPassword
+
+    // créer un PREMIER client LDAP
     await serviceClient.bind(env.ldap.bindDn, env.ldap.bindPassword);
-    //
-    // 3. rechercher l'utilisateur avec findUserWithClient()
+
+    // rechercher l'utilisateur avec findUserWithClient()
     const user = await findUserWithClient(serviceClient, username);
-    //
-    // 4. si l'utilisateur n'existe pas :
-    //    lancer LdapAuthenticationError
+  
+    // si l'utilisateur n'existe pas :
     if (!user) {
       console.log("L'utilisateur n'existe pas");
       throw new LdapAuthenticationError();
     }
-    //
-    // 5. vérifier ses groupes avec isAllowedUser()
+
+    // vérifier ses groupes avec isAllowedUser()
     if (!isAllowedUser(user)) {
       console.log("L'utilisateur n'est pas dans un groupe autorisé")
       throw new LdapAuthorizationError();
     }
 
-    //
-    // 6. créer un SECOND client LDAP
+    // créer un SECOND client LDAP
     const userClient = createLdapClient(url);
-    //
-    // 7. effectuer un bind avec :
-    //    - le DN réel de l'utilisateur
-    //    - le mot de passe fourni
+
+    // effectuer un bind avec : le DN réel de l'utilisateur, le mot de passe fourni
     try {
       await userClient.bind(user.dn, password);
       // 8. en cas d'échec :
@@ -312,12 +266,9 @@ async function authenticateOnServer(
     } finally {
       await userClient.unbind();
     }
-    // 10. retourner le LdapUser
+    // retourner le LdapUser
     return user;
   } finally {
-    //
-    // 9. effectuer systématiquement les unbind()
-    //    même lorsqu'une erreur survient
     await serviceClient.unbind();
   }
 }
@@ -332,13 +283,11 @@ async function authenticate(
   username: string,
   password: string,
 ): Promise<LdapUser> {
-  // TODO:
   // - vérifier que username et password ne sont pas vides
   if (!username || !password) {
     throw new LdapAuthenticationError("Identifiant et mot de passe requis.");
   }
 
-  //
   // - parcourir env.ldap.urls dans l'ordre
   for (const url of env.ldap.urls) {
     // - tenter le serveur suivant uniquement lorsqu'il s'agit
@@ -348,10 +297,6 @@ async function authenticate(
       return await authenticateOnServer(url, username, password)
 
     } catch (error) {
-      //
-      // - ne PAS essayer un autre serveur lorsqu'on obtient :
-      //      LdapAuthenticationError
-      //      LdapAuthorizationError
       if (error instanceof LdapAuthenticationError || error instanceof LdapAuthorizationError) {
         throw error;
       }
@@ -360,12 +305,7 @@ async function authenticate(
   }
 
   // - si aucun serveur ne fonctionne :
-  //   lancer LdapUnavailableError
   throw new LdapUnavailableError();
-
-  //
-  // Attention :
-  // ne jamais logger le mot de passe fourni.
 }
 
 export const ldapService = {

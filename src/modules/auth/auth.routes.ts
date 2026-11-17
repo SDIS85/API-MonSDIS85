@@ -4,11 +4,8 @@ import { authController } from "./auth.controller.js";
 
 const router = Router();
 
-/**
- * POST /api/auth/login
- *
- * Authentifie un utilisateur via LDAPS.
- */
+// POST /api/auth/login
+//Authentifie un utilisateur via LDAPS.
 router.post(
   "/login",
   // TODO:
