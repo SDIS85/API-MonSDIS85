@@ -5,7 +5,7 @@ import { Client } from "ldapts";
 
 import { env } from "./env.js";
 
-export interface LdapConnection {
+type LdapConnection = {
   client: Client;
   url: string;
 }
@@ -21,6 +21,7 @@ const caCertificate = env.ldap.caCertPath
  * dans LDAP_URLS.
  */
 export async function connectLdap(): Promise<LdapConnection> {
+  let lastError: unknown = null;
   // TODO:
   //
   // - parcourir env.ldap.urls
@@ -34,7 +35,16 @@ export async function connectLdap(): Promise<LdapConnection> {
   // - configurer TLS avec :
   //      rejectUnauthorized
   //      caCertificate
-  //
+  for (const url of env.ldap.urls) {
+    const client = new Client({
+      url,
+      timeout: 5000,
+      connectTimeout: 5000,
+      tlsOptions: {
+        rejectUnauthorized: env.ldap.requireTls,
+        ca: caCertificate,
+      }
+    });
   // - effectuer un bind avec le compte technique :
   //      env.ldap.bindDn
   //      env.ldap.bindPassword
@@ -52,5 +62,27 @@ export async function connectLdap(): Promise<LdapConnection> {
   // Attention :
   // ne jamais logger bindPassword.
 
-  throw new Error("TODO: implémenter la connexion LDAP avec failover");
+  try {
+    await client.bind(env.ldap.bindDn, env.ldap.bindPassword);
+
+    return {
+      client,
+      url,
+    };
+  } catch (error) {
+    lastError = error;
+
+    try {
+      await client.unbind();
+    } catch {
+      // ignore
+    }
+  }
+}
+
+throw new Error(
+  `Impossible de se connecter à un contrôleur LDAP. ${lastError instanceof Error ? lastError.message : ""
+  }`,
+);
+
 }

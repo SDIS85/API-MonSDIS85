@@ -93,7 +93,6 @@ function normalizeString(value: unknown): string | undefined {
   if (typeof value === "string") {
     return value;
   }
-
   return undefined;
 }
 
@@ -221,7 +220,7 @@ function isAllowedUser(user: LdapUser): boolean {
 
   // comparer user.memberOf avec env.ldap.allowedGroups
   // effectuer la comparaison sans tenir compte de la casse
-  const allowedGroups = env.ldap.allowedGroups.map((group) => group.toLowerCase());
+  const allowedGroups = env.ldap.allowedGroups;
 
   // si aucun groupe n'est configuré, décider du comportement souhaité
   if (allowedGroups.length === 0) {
@@ -229,7 +228,13 @@ function isAllowedUser(user: LdapUser): boolean {
   }
 
   // retourner true si au moins un groupe correspond
-  return user.memberOf.some((group) => allowedGroups.includes(group.toLowerCase()));
+  console.log("Allowed group : " + allowedGroups)
+  console.log(typeof allowedGroups)
+
+  console.log("User group : " + user.memberOf)
+  console.log(typeof user.memberOf)
+
+  return user.memberOf.some((group) => allowedGroups.includes(group));
 }
 
 /**
@@ -237,6 +242,7 @@ function isAllowedUser(user: LdapUser): boolean {
  * l'utilisateur, y compris via des groupes imbriqués.
  */
 async function getTransitiveGroups(
+  // client: Awaited<ReturnType<typeof connectLdap>["client"]>,
   client: Client,
   userDn: string,
 ): Promise<string[]> {
@@ -261,8 +267,9 @@ async function getTransitiveGroups(
   // Le filtre devra rechercher les groupes dont l'utilisateur
   // est membre directement ou indirectement.
   const LDAP_MATCHING_RULE = "1.2.840.113556.1.4.1941";
-  const filter = `(&(objectCategory=group)(member:${LDAP_MATCHING_RULE}:=${escapedDn}))`;
+  const filter = `(&(objectClass=group)(member:${LDAP_MATCHING_RULE}:=${escapedDn}))`;
 
+  // const searchEntries = await client.search(env.ldap.baseDn, {
   const { searchEntries } = await client.search(env.ldap.baseDn, {
     scope: "sub",
     filter,
@@ -271,7 +278,7 @@ async function getTransitiveGroups(
     ],
   });
 
-  return searchEntries.map((entry) => entry.dn);
+  return searchEntries.map((entry) => String(entry.distinguishedName ?? "")).filter(Boolean);
 
 }
 

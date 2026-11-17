@@ -34,7 +34,14 @@ const booleanEnv = (name: string, fallback = false): boolean => {
   return value.toLowerCase() === "true";
 };
 
-const listEnv = (name: string): string[] => {
+const listEnvGroup = (name: string): string[] => {
+  return requiredEnv(name)
+    .split(";")
+    .map((value) => value.trim())
+    .filter(Boolean);
+};
+
+const listEnvUrl = (name: string): string[] => {
   return requiredEnv(name)
     .split(",")
     .map((value) => value.trim())
@@ -46,7 +53,7 @@ export const env = {
   port: numberEnv("PORT", 3000),
 
   ldap: {
-    urls: listEnv("LDAP_URLS"),
+    urls: listEnvUrl("LDAP_URLS"),
     baseDn: requiredEnv("LDAP_BASE_DN"),
 
     bindDn: requiredEnv("LDAP_BIND_DN"),
@@ -54,7 +61,7 @@ export const env = {
 
     userFilter: requiredEnv("LDAP_USER_FILTER"),
 
-    allowedGroups: listEnv("LDAP_ALLOWED_GROUPS"),
+    allowedGroups: listEnvGroup("LDAP_ALLOWED_GROUPS"),
 
     requireTls: booleanEnv("LDAP_REQUIRE_TLS", true),
 
