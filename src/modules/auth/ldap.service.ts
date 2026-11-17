@@ -228,12 +228,6 @@ function isAllowedUser(user: LdapUser): boolean {
   }
 
   // retourner true si au moins un groupe correspond
-  console.log("Allowed group : " + allowedGroups)
-  console.log(typeof allowedGroups)
-
-  console.log("User group : " + user.memberOf)
-  console.log(typeof user.memberOf)
-
   return user.memberOf.some((group) => allowedGroups.includes(group));
 }
 
