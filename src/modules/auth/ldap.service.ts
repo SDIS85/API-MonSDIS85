@@ -255,7 +255,6 @@ async function authenticateOnServer(
     // effectuer un bind avec : le DN réel de l'utilisateur, le mot de passe fourni
     try {
       await userClient.bind(user.dn, password);
-      // 8. en cas d'échec :
       //    lancer LdapAuthenticationError
     } catch (error) {
       if (error instanceof InvalidCredentialsError) {
