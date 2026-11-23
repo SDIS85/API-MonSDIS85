@@ -3,6 +3,7 @@ import fs from "node:fs";
 import { Client, InvalidCredentialsError, type Entry } from "ldapts";
 
 import { env } from "../../config/env.js";
+import { connectLdap, createLdapClient } from "../../config/ldap.js";
 
 export interface LdapUser {
   dn: string;
@@ -37,29 +38,6 @@ export class LdapUnavailableError extends Error {
 }
 
 /**
- * Crée un client LDAP configuré pour un serveur donné.
- */
-function createLdapClient(url: string): Client {
-  const ca = env.ldap.caCertPath
-    ? [fs.readFileSync(env.ldap.caCertPath)]
-    : undefined;
-
-  return new Client({
-    url,
-    connectTimeout: env.ldap.connectTimeout,
-    timeout: env.ldap.timeout,
-
-    tlsOptions: env.ldap.requireTls
-      ? {
-        minVersion: "TLSv1.2",
-        ca,
-        rejectUnauthorized: true,
-      }
-      : undefined,
-  });
-}
-
-/**
  * Échappe les caractères spéciaux autorisés dans une valeur de filtre LDAP.
  *
  * Permet notamment d'éviter qu'un username fourni par l'utilisateur
@@ -81,7 +59,7 @@ function buildUserFilter(username: string): string {
   return env.ldap.userFilter.replace("{{username}}", escapedUsername);
 }
 
- // Normalise un attribut LDAP censé contenir une chaîne.
+// Normalise un attribut LDAP censé contenir une chaîne.
 function normalizeString(value: unknown): string | undefined {
   if (typeof value === "string") {
     return value;
@@ -220,21 +198,18 @@ async function getTransitiveGroups(
 
 // Tente d'authentifier l'utilisateur sur un serveur LDAP précis.
 async function authenticateOnServer(
-  url: string,
   username: string,
   password: string,
 ): Promise<LdapUser> {
 
-  const serviceClient = createLdapClient(url);
+  // créer un PREMIER client LDAP
+  const { client: serviceClient, url } = await connectLdap();
 
   try {
 
-    // créer un PREMIER client LDAP
-    await serviceClient.bind(env.ldap.bindDn, env.ldap.bindPassword);
-
     // rechercher l'utilisateur avec findUserWithClient()
     const user = await findUserWithClient(serviceClient, username);
-  
+
     // si l'utilisateur n'existe pas :
     if (!user) {
       console.log("L'utilisateur n'existe pas");
@@ -266,8 +241,9 @@ async function authenticateOnServer(
     // retourner le LdapUser
     return user;
   } finally {
-      await serviceClient.unbind().catch(() => undefined);
+    await serviceClient.unbind().catch(() => undefined);
   }
+
 }
 
 /**
@@ -286,19 +262,17 @@ async function authenticate(
   }
 
   // - parcourir env.ldap.urls dans l'ordre
-  for (const url of env.ldap.urls) {
-    // - tenter le serveur suivant uniquement lorsqu'il s'agit
-    //   d'une erreur technique / serveur indisponible
-    try {
-      // - appeler authenticateOnServer() pour chaque serveur
-      return await authenticateOnServer(url, username, password)
+  // - tenter le serveur suivant uniquement lorsqu'il s'agit
+  //   d'une erreur technique / serveur indisponible
+  try {
+    // - appeler authenticateOnServer() pour chaque serveur
+    return await authenticateOnServer(username, password)
 
-    } catch (error) {
-      if (error instanceof LdapAuthenticationError || error instanceof LdapAuthorizationError) {
-        throw error;
-      }
-      console.log(`Serveur LDAP indisponible : ${url}`);
+  } catch (error) {
+    if (error instanceof LdapAuthenticationError || error instanceof LdapAuthorizationError) {
+      throw error;
     }
+    console.log("Serveur LDAP indisponible :", error);
   }
 
   // - si aucun serveur ne fonctionne :
