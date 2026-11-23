@@ -19,7 +19,6 @@ function mapLdapUserToAuthenticatedUser(ldapUser: LdapUser): AuthenticatedUser {
 
   // TODO :
   // Ajouter / retirer des champs selon ce qu'on souhaite recevoir dans l'appli
-  // Token du téléphone pour notif phoneKey : string[]
 
   return {
     username: ldapUser.username,
