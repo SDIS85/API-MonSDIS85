@@ -23,8 +23,8 @@ export async function connectLdap(): Promise<LdapConnection> {
   for (const url of env.ldap.urls) {
     const client = new Client({
       url,
-      timeout: 5000,
-      connectTimeout: 5000,
+      timeout: env.ldap.timeout,
+      connectTimeout: env.ldap.connectTimeout,
       tlsOptions: {
         rejectUnauthorized: env.ldap.requireTls,
         ca: caCertificate,
