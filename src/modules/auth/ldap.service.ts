@@ -261,7 +261,7 @@ async function authenticateOnServer(
       }
       throw error;
     } finally {
-      await userClient.unbind();
+      await userClient.unbind().catch(() => undefined);
     }
     // retourner le LdapUser
     return user;
