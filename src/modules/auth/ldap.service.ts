@@ -266,7 +266,7 @@ async function authenticateOnServer(
     // retourner le LdapUser
     return user;
   } finally {
-    await serviceClient.unbind();
+      await serviceClient.unbind().catch(() => undefined);
   }
 }
 
