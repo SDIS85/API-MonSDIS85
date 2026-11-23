@@ -180,17 +180,15 @@ async function findUserWithClient(
 
 // Vérifie que l'utilisateur appartient à l'un des groupes LDAP autorisés.
 function isAllowedUser(user: LdapUser): boolean {
-
-  // comparer user.memberOf avec env.ldap.allowedGroups
-  const allowedGroups = env.ldap.allowedGroups;
-
-  // TODO : si aucun groupe n'est configuré, décider du comportement souhaité
-  if (allowedGroups.length === 0) {
+  if (env.ldap.allowedGroups.length === 0) {
     return false;
   }
 
+  // comparer user.memberOf avec env.ldap.allowedGroups
+  const allowedGroups = env.ldap.allowedGroups.map((group) => group.toLowerCase());
+
   // retourner true si au moins un groupe correspond
-  return user.memberOf.some((group) => allowedGroups.includes(group));
+  return user.memberOf.some((group) => allowedGroups.includes(group.toLowerCase()));
 }
 
 // Récupère tous les groupes Active Directory auxquels appartient l'utilisateur
