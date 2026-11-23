@@ -126,7 +126,13 @@ async function findUserWithClient(
       "employeeID",
       "initials",
     ],
+    sizeLimit: 2,
   });
+
+  if(searchEntries.length >1){
+    console.log("Plusieurs utilisateurs trouvés");
+    return null;
+  }
 
   const [entry] = searchEntries;
   if (!entry) {
